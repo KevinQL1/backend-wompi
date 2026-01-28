@@ -25,7 +25,7 @@ El backend es responsable de:
 
 El proyecto está organizado siguiendo los principios de **Arquitectura Hexagonal (Ports & Adapters)**, separando claramente las responsabilidades de cada capa.
 
-
+```txt
 backend-wompi/
 ├── package.json            # Configuración del proyecto y scripts
 ├── serverless.yml          # Configuración de AWS Serverless (Lambda, API Gateway)
@@ -45,9 +45,9 @@ backend-wompi/
 │   ├── infrastructure/     # Implementaciones técnicas
 │   │   ├── dynamodb/       # Repositorios DynamoDB
 │   │   ├── wompi/          # Cliente de la pasarela de pagos
-│   │   └── crypto/         # Cifrado de información sensible
+│   │   │── crypto/         # Cifrado de información sensible
 │   │
-│   ├─── handlers/       # Handlers HTTP (API Gateway → Lambda)
+│   ├── handlers/           # Handlers HTTP (API Gateway → Lambda)
 │   │
 │   └── config/             # Configuración y constantes del sistema
 │
