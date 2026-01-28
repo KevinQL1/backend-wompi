@@ -55,5 +55,3 @@ backend-wompi/
     ├── domain/             # Tests de entidades del dominio
     ├── application/        # Tests de casos de uso
     └── infrastructure/     # Tests de servicios e integraciones
-
-

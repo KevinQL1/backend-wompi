@@ -1,0 +1,31 @@
+{
+  "name": "backend-wompi",
+  "version": "1.0.0",
+  "description": "Este repositorio contiene el **backend** de la prueba de desarrollo FullStack cuyo objetivo es construir una aplicación para **pagar un producto usando Wompi**, siguiendo buenas prácticas de arquitectura, seguridad y testing.",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules IS_TEST=true stage=local region=local jest --passWithNoTests --runInBand --no-cache",
+    "test:ci": "npm test -- --coverage",
+    "build": "rm -rf dist && node esbuild/mainBuild.js",
+    "deploy": "npm run build && serverless deploy",
+    "local": "npm run build && serverless offline"
+  },
+  "author": "Kevin Quintero",
+  "license": "MIT",
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "cross-env": "^10.1.0",
+    "esbuild": "^0.27.2",
+    "jest": "^30.2.0",
+    "serverless": "^3.38.0",
+    "serverless-offline": "^13.3.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.540.0",
+    "@aws-sdk/lib-dynamodb": "^3.540.0",
+    "dotenv": "^16.4.5"
+  }
+}

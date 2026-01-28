@@ -1,0 +1,72 @@
+# --------------------------------------------------
+# Serverless Framework v3
+# Backend Wompi – Prueba Técnica
+# --------------------------------------------------
+
+service: backend-wompi
+
+frameworkVersion: '3'
+
+# --------------------------------------------------
+# Provider (AWS)
+# --------------------------------------------------
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-1
+  stage: ${opt:stage, 'local'}
+
+  environment:
+    STAGE: ${self:provider.stage}
+    NODE_ENV: ${self:provider.stage}
+    IS_TEST: ${env:IS_TEST, 'false'}
+
+  # Permisos básicos (DynamoDB luego)
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: '*'
+
+# --------------------------------------------------
+# Plugins
+# --------------------------------------------------
+plugins:
+  - serverless-offline
+
+# --------------------------------------------------
+# Custom config
+# --------------------------------------------------
+custom:
+  serverless-offline:
+    httpPort: 3000
+    reloadHandler: true
+
+# --------------------------------------------------
+# Functions (Handlers)
+# --------------------------------------------------
+functions:
+
+  # ----------------------------------------------
+  # Crear una transacción
+  # POST /transactions
+  # ----------------------------------------------
+  createTransaction:
+    handler: src/interfaces/handlers/createTransaction.handler.createTransactionHandler
+    events:
+      - http:
+          path: transactions
+          method: post
+          cors: true
+
+  # ----------------------------------------------
+  # Pagar una transacción
+  # POST /transactions/{id}/pay
+  # ----------------------------------------------
+  payTransaction:
+    handler: src/interfaces/handlers/payTransaction.handler.payTransactionHandler
+    events:
+      - http:
+          path: transactions/{id}/pay
+          method: post
+          cors: true
