@@ -8,7 +8,7 @@ jest.unstable_mockModule('#/application/useCases/GetProducts.js', () => ({
   })),
 }))
 
-const { handler } = await import('#/handlers/getProducts.handler.js')
+const { handler } = await import('#/handlers/getProducts.js')
 
 describe('GetProducts Handler', () => {
   beforeEach(() => {

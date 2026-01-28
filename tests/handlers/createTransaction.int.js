@@ -21,7 +21,7 @@ jest.unstable_mockModule(
   })
 );
 
-const { handler } = await import('#/handlers/createTransaction.handler.js');
+const { handler } = await import('#/handlers/createTransaction.js');
 
 describe('CreateTransaction.handler', () => {
   test('should return 201 when transaction is created', async () => {

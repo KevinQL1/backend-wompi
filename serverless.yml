@@ -8,18 +8,22 @@ service: backend-wompi
 frameworkVersion: '3'
 
 # --------------------------------------------------
+# Plugins
+# --------------------------------------------------
+plugins:
+  - serverless-offline
+
+# --------------------------------------------------
 # Provider (AWS)
 # --------------------------------------------------
+useDotenv: true
 provider:
   name: aws
-  runtime: nodejs22.x
+  runtime: nodejs20.x
   region: us-east-1
   stage: ${opt:stage, 'local'}
 
   environment:
-    STAGE: ${self:provider.stage}
-    NODE_ENV: ${self:provider.stage}
-    IS_TEST: ${env:IS_TEST, 'false'}
     PRODUCT_TABLE: ${self:provider.stage}-ProductTable
     CUSTOMER_TABLE: ${self:provider.stage}-CustomerTable
     TRANSACTION_TABLE: ${self:provider.stage}-TransactionTable
@@ -34,18 +38,25 @@ provider:
       Resource: "*"
 
 # --------------------------------------------------
-# Plugins
-# --------------------------------------------------
-plugins:
-  - serverless-offline
-
-# --------------------------------------------------
 # Custom config
 # --------------------------------------------------
 custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: false
+    target: node20
+    platform: node
+    outdir: dist
+    exclude:
+      - aws-sdk
+  baseHandler:
+    local: dist
+  pathRoot: ${self:custom.baseHandler.${self:provider.stage}}
   serverless-offline:
-    httpPort: 3000
-    reloadHandler: true
+    httpPort: 4001
+    lambdaPort: 4002
+    noAuth: true
 
 # --------------------------------------------------
 # Resources (DynamoDB Tables)
@@ -147,4 +158,13 @@ functions:
       - http:
           path: webhook/wompi
           method: post
+          cors: true
+
+  # Get Products
+  getProducts:
+    handler: src/interfaces/handlers/getProducts.handler
+    events:
+      - http:
+          path: products
+          method: get
           cors: true

@@ -35,7 +35,7 @@ jest.unstable_mockModule('uuid', () => ({
 }));
 
 // Importamos handler después de los mocks
-const { handler } = await import('#/handlers/webhookWompi.handler.js');
+const { handler } = await import('#/handlers/webhookWompi.js');
 
 describe('webhookWompi.handler', () => {
 

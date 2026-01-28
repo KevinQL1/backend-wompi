@@ -29,7 +29,7 @@ describe('payTransaction.handler', () => {
   let handler;
 
   beforeEach(async () => {
-    ({ handler } = await import('#/handlers/payTransaction.handler.js'));
+    ({ handler } = await import('#/handlers/payTransaction.js'));
     jest.clearAllMocks();
   });
 
