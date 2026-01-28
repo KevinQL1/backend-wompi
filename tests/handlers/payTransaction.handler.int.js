@@ -1,13 +1,10 @@
 import { jest } from '@jest/globals';
 
-// Mock de repositorios y servicios
-const mockUpdateStatus = jest.fn();
-const mockDecreaseStock = jest.fn();
-const mockProcessPayment = jest.fn().mockResolvedValue({
-  status: 'APPROVED',
-  wompiTransactionId: 'w123'
-});
+const mockUpdateStatus = jest.fn().mockResolvedValue(true);
+const mockDecreaseStock = jest.fn().mockResolvedValue(true);
+const mockExecute = jest.fn(); // <-- mock para ProcessPayment.execute
 
+// Mock repositorios
 jest.unstable_mockModule('#/domain/repositories/TransactionRepository.js', () => ({
   TransactionRepository: class {
     findById = jest.fn().mockResolvedValue({ id: 't1', productId: 'p1' });
@@ -21,9 +18,10 @@ jest.unstable_mockModule('#/domain/repositories/ProductRepository.js', () => ({
   }
 }));
 
-jest.unstable_mockModule('#/application/services/PaymentService.js', () => ({
-  PaymentService: class {
-    processPayment = mockProcessPayment;
+// Mock ProcessPayment
+jest.unstable_mockModule('#/application/useCases/ProcessPayment.js', () => ({
+  ProcessPayment: class {
+    execute = mockExecute;
   }
 }));
 
@@ -36,9 +34,15 @@ describe('payTransaction.handler', () => {
   });
 
   it('should return 200 with approved status', async () => {
+    // Mockear execute para que apruebe el pago
+    mockExecute.mockResolvedValueOnce({
+      status: 'APPROVED',
+      wompiTransactionId: 'w123'
+    });
+
     const event = {
       pathParameters: { transactionId: 't1' },
-      body: JSON.stringify({ paymentInfo: {} })
+      body: JSON.stringify({ paymentInfo: {} }) // no hace falta campos reales
     };
 
     const response = await handler(event);
@@ -47,8 +51,21 @@ describe('payTransaction.handler', () => {
     expect(response.statusCode).toBe(200);
     expect(body.status).toBe('APPROVED');
     expect(body.wompiTransactionId).toBe('w123');
-    expect(mockUpdateStatus).toHaveBeenCalled();
-    expect(mockDecreaseStock).toHaveBeenCalled();
-    expect(mockProcessPayment).toHaveBeenCalled();
+    expect(mockExecute).toHaveBeenCalled();
+  });
+
+  it('should return 400 if execute throws an error', async () => {
+    mockExecute.mockRejectedValueOnce(new Error('Payment failed'));
+
+    const event = {
+      pathParameters: { transactionId: 't1' },
+      body: JSON.stringify({ paymentInfo: {} })
+    };
+
+    const response = await handler(event);
+    const body = JSON.parse(response.body);
+
+    expect(response.statusCode).toBe(400);
+    expect(body.error).toBe('Payment failed');
   });
 });

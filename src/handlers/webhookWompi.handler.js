@@ -56,7 +56,6 @@ export const handler = async (event) => {
 
     return { statusCode: 200, body: 'OK' };
   } catch (err) {
-    console.error('Webhook error:', err);
     return { statusCode: 500, body: err.message };
   }
 };

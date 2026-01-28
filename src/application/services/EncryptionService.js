@@ -1,19 +1,20 @@
 import crypto from 'crypto';
-import { ENCRYPTION_KEY, ENCRYPTION_IV } from '#/config/index.js';
+import { config } from '#/config/index.js';
 
 /**
  * Servicio de cifrado/descifrado para datos sensibles
  * Ejemplo: tarjetas de crédito guardadas en CustomerRepository
  */
-
 export class EncryptionService {
-  constructor() {
-    if (!ENCRYPTION_KEY || !ENCRYPTION_IV) {
-      throw new Error('Encryption key and IV must be defined in environment variables');
+  constructor(key = config.encryptionKey, iv = config.encryptionIV) {
+    if (!key || !iv) {
+      throw new Error(
+        'Encryption key and IV must be defined in environment variables'
+      );
     }
 
-    this.key = Buffer.from(ENCRYPTION_KEY, 'hex');
-    this.iv = Buffer.from(ENCRYPTION_IV, 'hex');
+    this.key = Buffer.from(key, 'hex');
+    this.iv = Buffer.from(iv, 'hex');
   }
 
   encrypt(text) {
