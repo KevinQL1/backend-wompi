@@ -1,18 +1,18 @@
 import { GetProducts } from '#/application/useCases/GetProducts.js'
-import { Product } from '#/domain/entities/Product.js'
+import { ProductEntity } from '#/domain/entities/ProductEntity.js'
 
 describe('GetProducts Use Case', () => {
   it('should return all products from repository', async () => {
     // Fake repository (NO DynamoDB)
     const fakeProductRepository = {
       findAll: async () => [
-        new Product({
+        new ProductEntity({
           id: 'prod-1',
           name: 'Laptop',
           price: 1500,
           stock: 10
         }),
-        new Product({
+        new ProductEntity({
           id: 'prod-2',
           name: 'Phone',
           price: 800,

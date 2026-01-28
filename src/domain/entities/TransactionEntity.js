@@ -9,7 +9,7 @@ export const TransactionStatus = {
   DECLINED: 'DECLINED',
 };
 
-export class Transaction {
+export class TransactionEntity {
   constructor({
     id,
     productId,

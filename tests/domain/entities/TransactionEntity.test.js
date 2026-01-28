@@ -1,6 +1,6 @@
-import { Transaction, TransactionStatus } from '#/domain/entities/Transaction.js';
+import { TransactionEntity, TransactionStatus } from '#/domain/entities/TransactionEntity.js';
 
-describe('Transaction Entity', () => {
+describe('TransactionEntity', () => {
   const baseData = {
     id: 'tx-123',
     productId: 'prod-1',
@@ -11,7 +11,7 @@ describe('Transaction Entity', () => {
   };
 
   test('should create a valid transaction', () => {
-    const transaction = new Transaction(baseData);
+    const transaction = new TransactionEntity(baseData);
 
     expect(transaction.id).toBe(baseData.id);
     expect(transaction.status).toBe(TransactionStatus.PENDING);
@@ -20,12 +20,12 @@ describe('Transaction Entity', () => {
 
   test('should throw error if productId is missing', () => {
     expect(() => {
-      new Transaction({ ...baseData, productId: null });
+      new TransactionEntity({ ...baseData, productId: null });
     }).toThrow('Transaction must have a productId');
   });
 
   test('should approve a pending transaction', () => {
-    const transaction = new Transaction(baseData);
+    const transaction = new TransactionEntity(baseData);
 
     transaction.approve('wompi-123');
 
@@ -34,7 +34,7 @@ describe('Transaction Entity', () => {
   });
 
   test('should not approve a non-pending transaction', () => {
-    const transaction = new Transaction(baseData);
+    const transaction = new TransactionEntity(baseData);
     transaction.approve('wompi-123');
 
     expect(() => {
@@ -43,7 +43,7 @@ describe('Transaction Entity', () => {
   });
 
   test('should decline a pending transaction', () => {
-    const transaction = new Transaction(baseData);
+    const transaction = new TransactionEntity(baseData);
 
     transaction.decline();
 

@@ -1,5 +1,5 @@
 import { CreateTransaction } from '#/application/useCases/CreateTransaction.js';
-import { TransactionStatus } from '#/domain/entities/Transaction.js';
+import { TransactionStatus } from '#/domain/entities/TransactionEntity.js';
 import { jest } from '@jest/globals';
 
 describe('CreateTransaction Use Case', () => {

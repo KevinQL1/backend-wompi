@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Transaction, TransactionStatus } from '#/domain/entities/Transaction.js';
+import { TransactionEntity, TransactionStatus } from '#/domain/entities/TransactionEntity.js';
 
 /**
  * Caso de uso encargado de crear una transacción de pago
@@ -21,7 +21,7 @@ export class CreateTransaction {
 
     const now = new Date().toISOString();
 
-    const transaction = new Transaction({
+    const transaction = new TransactionEntity({
       id: uuidv4(),
       customerId,
       productId,

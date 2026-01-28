@@ -1,4 +1,4 @@
-export class Product {
+export class ProductEntity {
   constructor({ id, name, description, price, stock }) {
     this.validate({ id, name, price, stock })
 

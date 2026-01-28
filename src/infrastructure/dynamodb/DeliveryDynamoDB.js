@@ -4,15 +4,14 @@ import {
   ScanCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-
 import { dynamoDb } from './DynamoClient.js';
-import { TransactionEntity } from '#/domain/entities/TransactionEntity.js';
+import { DeliveryEntity } from '#/domain/entities/DeliveryEntity.js';
 
 /**
- * Implementación DynamoDB del TransactionRepository
+ * Implementación DynamoDB del DeliveryRepository
  * Solo persistencia, cero lógica de negocio.
  */
-export class TransactionDynamoDB {
+export class DeliveryDynamoDB {
   constructor(tableName) {
     if (!tableName) {
       throw new Error('Table name is required');
@@ -27,12 +26,12 @@ export class TransactionDynamoDB {
         TableName: this.tableName,
         FilterExpression: 'entity = :entity',
         ExpressionAttributeValues: {
-          ':entity': 'TransactionEntity',
+          ':entity': 'DeliveryEntity',
         },
       })
     );
 
-    return result.Items.map(item => new TransactionEntity(item));
+    return result.Items.map(item => new DeliveryEntity(item));
   }
 
   async findById(id) {
@@ -40,52 +39,51 @@ export class TransactionDynamoDB {
       new GetCommand({
         TableName: this.tableName,
         Key: {
-          PK: `TRANSACTION#${id}`,
-          SK: `TRANSACTION#${id}`,
+          PK: `DELIVERY#${id}`,
+          SK: `DELIVERY#${id}`,
         },
       })
     );
 
     if (!result.Item) return null;
 
-    return new TransactionEntity(result.Item);
+    return new DeliveryEntity(result.Item);
   }
 
-  async save(transaction) {
+  async save(delivery) {
     await dynamoDb.send(
       new PutCommand({
         TableName: this.tableName,
         Item: {
-          PK: `TRANSACTION#${transaction.id}`,
-          SK: `TRANSACTION#${transaction.id}`,
-          entity: 'TransactionEntity',
-
-          ...transaction,
+          PK: `DELIVERY#${delivery.id}`,
+          SK: `DELIVERY#${delivery.id}`,
+          entity: 'DeliveryEntity',
+          ...delivery,
         },
       })
     );
   }
 
-  async update(transaction) {
+  async update(delivery) {
     await dynamoDb.send(
       new UpdateCommand({
         TableName: this.tableName,
         Key: {
-          PK: `TRANSACTION#${transaction.id}`,
-          SK: `TRANSACTION#${transaction.id}`,
+          PK: `DELIVERY#${delivery.id}`,
+          SK: `DELIVERY#${delivery.id}`,
         },
         UpdateExpression: `
-          SET #status = :status,
-              wompiTransactionId = :wompiTransactionId,
+          SET address = :address,
+              #status = :status,
               updatedAt = :updatedAt
         `,
         ExpressionAttributeNames: {
           '#status': 'status',
         },
         ExpressionAttributeValues: {
-          ':status': transaction.status,
-          ':wompiTransactionId': transaction.wompiTransactionId,
-          ':updatedAt': transaction.updatedAt,
+          ':address': delivery.address,
+          ':status': delivery.status,
+          ':updatedAt': delivery.updatedAt,
         },
       })
     );
