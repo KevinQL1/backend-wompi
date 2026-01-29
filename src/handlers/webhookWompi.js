@@ -14,6 +14,17 @@ export const handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
+    // Optional: verify webhook signature if private key and signature header are provided
+    const signatureHeader = event.headers?.['x-wompi-signature'] || event.headers?.['Wompi-Signature'] || event.headers?.['signature'];
+    const privateKey = process.env.WOMPI_PRIVATE_KEY;
+    if (privateKey && signatureHeader) {
+      const { createHmac } = await import('crypto');
+      const expected = createHmac('sha256', privateKey).update(event.body).digest('hex');
+      if (expected !== signatureHeader) {
+        return { statusCode: 401, body: 'Invalid signature' };
+      }
+    }
+
     const wompiTransactionId = body.data?.id;
     const status = body.data?.status;
 
@@ -22,7 +33,7 @@ export const handler = async (event) => {
     }
 
     // Buscar la transacción por wompiTransactionId
-    const transaction = await transactionDynamoDB.findById(wompiTransactionId);
+    const transaction = await transactionDynamoDB.findByWompiTransactionId(wompiTransactionId);
     if (!transaction) {
       return { statusCode: 404, body: 'Transaction not found' };
     }

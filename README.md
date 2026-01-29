@@ -30,7 +30,7 @@ backend-wompi/
 ├── package.json            # Configuración del proyecto y scripts
 ├── serverless.yml          # Configuración de AWS Serverless (Lambda, API Gateway)
 ├── README.md               # Documentación del proyecto
-├── jest.config.js          # Configuración de Jest
+├── jest.config.mjs         # Configuración de Jest
 ├── .env                    # Variables de entorno (no versionado)
 ├── .gitignore              # Configuración Git
 ├── docker-compose.yml      # Docker para las tablas de dynamoDB(local)
@@ -58,3 +58,67 @@ backend-wompi/
     ├── application/        # Tests de casos de uso
     ├── handlers/           # Tests de handlers
     └── infrastructure/     # Tests de servicios e integraciones
+
+
+---
+
+## 🚀 Quick Start
+
+1. Instalar dependencias:
+
+```bash
+npm install
+```
+
+2. Levantar DynamoDB local (Docker):
+
+```bash
+npm run dynamodb:start
+```
+
+3. Crear tablas (local):
+
+```bash
+npm run dynamodb:create
+```
+
+4. Ejecutar tests:
+
+```bash
+npm test
+```
+
+---
+
+## 🔐 Variables de entorno
+
+Crea un archivo `.env` basado en `.env.example` con las siguientes variables mínimas:
+
+- WOMPI_PUBLIC_KEY
+- WOMPI_PRIVATE_KEY (opcional, para verificar webhooks)
+- WOMPI_BASE_URL (opcional, ej. https://api-sandbox.co.uat.wompi.dev/v1)
+- PRODUCT_TABLE
+- CUSTOMER_TABLE
+- TRANSACTION_TABLE
+- DELIVERY_TABLE
+- ENCRYPTION_KEY
+- ENCRYPTION_IV
+
+---
+
+## 💳 Tarjetas de prueba (sandbox)
+
+- VISA: `4111111111111111`
+- MASTERCARD: `5555555555554444`
+
+Usa expiraciones futuras (ej. `12/50`) y CVC `123`.
+
+---
+
+## 🔧 Endpoints principales
+
+- POST `/products` → Crear producto
+- GET `/products` → Listar productos
+- POST `/transaction` → Crear transacción (PENDING)
+- POST `/transaction/pay` → Iniciar pago (usando Wompi)
+- POST `/webhook/wompi` → Webhook para recibir estados de pago

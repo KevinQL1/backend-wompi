@@ -25,67 +25,66 @@ describe('ProcessPayment UseCase', () => {
   })
 
   it('should throw error if cardNumber or cardType is missing', async () => {
-    await expect(useCase.execute('t1', { customerAddress: 'Calle 123' }))
+    await expect(useCase.execute({ transactionId: 't1', customerAddress: 'Calle 123' }))
       .rejects.toThrow('Card number and type are required')
   })
 
   it('should throw error if customerAddress is missing', async () => {
-    await expect(useCase.execute('t1', { cardNumber: '4111111111111111', cardType: 'VISA' }))
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA' }))
       .rejects.toThrow('Delivery address is required')
   })
 
   it('should throw error if cardNumber is invalid', async () => {
-    await expect(useCase.execute('t1', { cardNumber: '123', cardType: 'VISA', customerAddress: 'Calle 123' }))
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '123', cardType: 'VISA', customerAddress: 'Calle 123' }))
       .rejects.toThrow('Card number must be 16 digits')
   })
 
   it('should throw error if cardType is invalid', async () => {
-    await expect(useCase.execute('t1', { cardNumber: '4111111111111111', cardType: 'AMEX', customerAddress: 'Calle 123' }))
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'AMEX', customerAddress: 'Calle 123' }))
       .rejects.toThrow('Only VISA and MASTERCARD allowed')
+  })
+
+  it('should throw error if card fails Luhn', async () => {
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111112', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '12/50', cvc: '123' }))
+      .rejects.toThrow('Card failed Luhn check')
+  })
+
+  it('should throw error if expiry invalid or expired', async () => {
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '01/20', cvc: '123' }))
+      .rejects.toThrow('Card expiration invalid or expired')
+  })
+
+  it('should throw error if cvc invalid', async () => {
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '12/50', cvc: '12' }))
+      .rejects.toThrow('CVC must be 3 digits')
   })
 
   it('should throw error if transaction not found', async () => {
     mockTransactionRepo.findById.mockResolvedValue(null)
-    await expect(useCase.execute('t1', {
-      cardNumber: '4111111111111111',
-      cardType: 'VISA',
-      customerAddress: 'Calle 123'
-    })).rejects.toThrow('Transaction not found')
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '12/50', cvc: '123' })).rejects.toThrow('Transaction not found')
   })
 
   it('should throw error if product not found', async () => {
-    mockTransactionRepo.findById.mockResolvedValue({ id: 't1', productId: 'p1' })
+    mockTransactionRepo.findById.mockResolvedValue({ id: 't1', productId: 'p1', amount: 1 })
     mockProductRepo.findById.mockResolvedValue(null)
-    await expect(useCase.execute('t1', {
-      cardNumber: '4111111111111111',
-      cardType: 'VISA',
-      customerAddress: 'Calle 123'
-    })).rejects.toThrow('Product with ID p1 not found')
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '12/50', cvc: '123' })).rejects.toThrow('Product with ID p1 not found')
   })
 
   it('should throw error if product is out of stock', async () => {
-    mockTransactionRepo.findById.mockResolvedValue({ id: 't1', productId: 'p1' })
+    mockTransactionRepo.findById.mockResolvedValue({ id: 't1', productId: 'p1', amount: 1 })
     mockProductRepo.findById.mockResolvedValue({ id: 'p1', name: 'Producto', stock: 0 })
-    await expect(useCase.execute('t1', {
-      cardNumber: '4111111111111111',
-      cardType: 'VISA',
-      customerAddress: 'Calle 123'
-    })).rejects.toThrow('Product Producto is out of stock')
+    await expect(useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '12/50', cvc: '123' })).rejects.toThrow('Product Producto is out of stock or insufficient stock: 0 for the requested amount 1')
   })
 
   it('should process payment and decrease stock if approved', async () => {
-    const transaction = { id: 't1', productId: 'p1' }
+    const transaction = { id: 't1', productId: 'p1', amount: 1 }
     const product = { id: 'p1', name: 'Producto', stock: 5 }
 
     mockTransactionRepo.findById.mockResolvedValue(transaction)
     mockProductRepo.findById.mockResolvedValue(product)
     mockPaymentService.processPayment.mockResolvedValue({ status: 'APPROVED', wompiTransactionId: 'w123' })
 
-    const result = await useCase.execute('t1', {
-      cardNumber: '4111111111111111',
-      cardType: 'VISA',
-      customerAddress: 'Calle 123'
-    })
+    const result = await useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'VISA', customerAddress: 'Calle 123', expiry: '12/50', cvc: '123' })
 
     expect(mockTransactionRepo.updateStatus).toHaveBeenCalledWith('t1', 'APPROVED', 'w123')
     expect(mockProductRepo.decreaseStock).toHaveBeenCalledWith('p1', 1)
@@ -97,18 +96,14 @@ describe('ProcessPayment UseCase', () => {
   })
 
   it('should process payment but not decrease stock if declined', async () => {
-    const transaction = { id: 't1', productId: 'p1' }
+    const transaction = { id: 't1', productId: 'p1', amount: 1 }
     const product = { id: 'p1', name: 'Producto', stock: 5 }
 
     mockTransactionRepo.findById.mockResolvedValue(transaction)
     mockProductRepo.findById.mockResolvedValue(product)
     mockPaymentService.processPayment.mockResolvedValue({ status: 'DECLINED', wompiTransactionId: 'w456' })
 
-    const result = await useCase.execute('t1', {
-      cardNumber: '4111111111111111',
-      cardType: 'MASTERCARD',
-      customerAddress: 'Calle 123'
-    })
+    const result = await useCase.execute({ transactionId: 't1', cardNumber: '4111111111111111', cardType: 'MASTERCARD', customerAddress: 'Calle 123', expiry: '12/50', cvc: '123' })
 
     expect(mockTransactionRepo.updateStatus).toHaveBeenCalledWith('t1', 'DECLINED', 'w456')
     expect(mockProductRepo.decreaseStock).not.toHaveBeenCalled()

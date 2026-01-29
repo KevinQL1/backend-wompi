@@ -1,10 +1,15 @@
 import { CreateTransaction } from '#/application/useCases/CreateTransaction.js';
 import { TransactionDynamoDB } from '#/infrastructure/dynamodb/TransactionDynamoDB.js';
+import { ProductDynamoDB } from '#/infrastructure/dynamodb/ProductDynamoDB.js';
 
 /*
  * Crea una transacción en estado PENDING.
  * No contiene lógica de negocio.
  */
+
+const transactionRepository = new TransactionDynamoDB(process.env.TRANSACTION_TABLE);
+const productRepository = new ProductDynamoDB(process.env.PRODUCT_TABLE);
+const createTransaction = new CreateTransaction({ transactionRepository, productRepository });
 
 export const handler = async (event) => {
     try {
@@ -19,12 +24,6 @@ export const handler = async (event) => {
                 }),
             };
         }
-
-        const repository = new TransactionDynamoDB(
-            process.env.TRANSACTIONS_TABLE
-        );
-
-        const createTransaction = new CreateTransaction(repository);
 
         const transaction = await createTransaction.execute({
             customerId,
@@ -42,7 +41,7 @@ export const handler = async (event) => {
         return {
             statusCode: 500,
             body: JSON.stringify({
-                message: 'Internal server error',
+                message: error.message,
             }),
         };
     }

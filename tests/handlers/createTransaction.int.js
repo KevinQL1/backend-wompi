@@ -1,25 +1,26 @@
 import { jest } from '@jest/globals';
 
-jest.unstable_mockModule(
-  '#/infrastructure/dynamodb/TransactionDynamoDB.js',
-  () => ({
-    TransactionDynamoDB: jest.fn().mockImplementation(() => ({
-      save: jest.fn(),
-    })),
-  })
-);
+const createTxExecuteMock = jest.fn().mockResolvedValue({ id: 'tx-1', status: 'PENDING' });
 
-jest.unstable_mockModule(
-  '#/application/useCases/CreateTransaction.js',
-  () => ({
-    CreateTransaction: jest.fn().mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue({
-        id: 'tx-1',
-        status: 'PENDING',
-      }),
-    })),
-  })
-);
+jest.unstable_mockModule('#/infrastructure/dynamodb/TransactionDynamoDB.js', () => ({
+  TransactionDynamoDB: jest.fn().mockImplementation(() => ({
+    save: jest.fn(),
+  })),
+}));
+
+// Mock ProductDynamoDB to avoid constructor errors when handler imports it
+jest.unstable_mockModule('#/infrastructure/dynamodb/ProductDynamoDB.js', () => ({
+  ProductDynamoDB: jest.fn().mockImplementation(() => ({
+    findById: jest.fn(),
+  })),
+}));
+
+// Expose the execute mock so tests can change its behaviour per scenario
+jest.unstable_mockModule('#/application/useCases/CreateTransaction.js', () => ({
+  CreateTransaction: jest.fn().mockImplementation(() => ({
+    execute: createTxExecuteMock,
+  })),
+}));
 
 const { handler } = await import('#/handlers/createTransaction.js');
 
@@ -49,5 +50,35 @@ describe('CreateTransaction.handler', () => {
     const response = await handler(event);
 
     expect(response.statusCode).toBe(400);
+  });
+
+  test('should return 500 if CreateTransaction.execute throws', async () => {
+    // For this test, make the execute throw
+    createTxExecuteMock.mockRejectedValueOnce(new Error('boom'));
+
+    const event = {
+      body: JSON.stringify({
+        customerId: 'cust-1',
+        productId: 'prod-1',
+        amount: 1000,
+      }),
+    };
+
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(500);
+    expect(JSON.parse(response.body).message).toBe('boom');
+  });
+
+  test('should return 500 on invalid JSON body', async () => {
+    const event = {
+      body: '{ invalid json',
+    };
+
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(500);
+    // message comes from JSON.parse error, ensure it is a string
+    expect(JSON.parse(response.body).message).toEqual(expect.any(String));
   });
 });
