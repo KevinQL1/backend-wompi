@@ -9,7 +9,12 @@ process.on('message', async ({ entryPoints, mode }) => {
     target: 'node20',
     outdir: 'dist',
     outbase: 'src',
-    logLevel: 'info'
+    logLevel: 'info',
+    external: [
+    '@aws-sdk/client-dynamodb',
+    '@aws-sdk/lib-dynamodb',
+    'buffer'
+  ]
   }
 
   const buildOptions = {

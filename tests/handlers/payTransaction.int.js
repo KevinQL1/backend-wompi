@@ -1,5 +1,8 @@
 import { jest } from '@jest/globals';
 
+process.env.PRODUCT_TABLE = 'mockProductTable'
+process.env.TRANSACTION_TABLE = 'mockTransactionTable'
+
 const mockUpdateStatus = jest.fn().mockResolvedValue(true);
 const mockDecreaseStock = jest.fn().mockResolvedValue(true);
 const mockExecute = jest.fn(); // <-- mock para ProcessPayment.execute

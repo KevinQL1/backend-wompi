@@ -32,6 +32,7 @@ backend-wompi/
 ├── README.md               # Documentación del proyecto
 ├── jest.config.js          # Configuración de Jest
 ├── .env                    # Variables de entorno (no versionado)
+├── .gitignore              # Configuración Git
 │
 ├── src/
 │   ├── domain/             # Núcleo del negocio

@@ -1,11 +1,7 @@
 import { GetProducts } from '#/application/useCases/GetProducts.js';
-import { ProductRepository } from '#/domain/repositories/ProductRepository.js';
+import { ProductDynamoDB } from '#/infrastructure/dynamodb/ProductDynamoDB.js';
 
-/*
- * Obtiene todos los procutos
- */
-
-const productRepo = new ProductRepository();
+const productRepo = new ProductDynamoDB(process.env.PRODUCT_TABLE);
 const getProducts = new GetProducts(productRepo);
 
 export const handler = async (event) => {

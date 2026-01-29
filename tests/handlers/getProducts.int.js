@@ -1,5 +1,7 @@
 import { jest } from '@jest/globals'
 
+process.env.PRODUCT_TABLE = 'mockProductTable'
+
 const mockExecute = jest.fn()
 
 jest.unstable_mockModule('#/application/useCases/GetProducts.js', () => ({

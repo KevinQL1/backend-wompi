@@ -1,10 +1,10 @@
 import { ProcessPayment } from '#/application/useCases/ProcessPayment.js';
-import { TransactionRepository } from '#/domain/repositories/TransactionRepository.js';
-import { ProductRepository } from '#/domain/repositories/ProductRepository.js';
+import { TransactionDynamoDB } from '#/infrastructure/dynamodb/TransactionDynamoDB.js';
+import { ProductDynamoDB } from '#/infrastructure/dynamodb/ProductDynamoDB.js';
 import { PaymentService } from '#/application/services/PaymentService.js';
 
-const transactionRepo = new TransactionRepository();
-const productRepo = new ProductRepository();
+const transactionRepo = new TransactionDynamoDB(process.env.TRANSACTION_TABLE);
+const productRepo = new ProductDynamoDB(process.env.PRODUCT_TABLE);
 const paymentService = new PaymentService();
 const processPaymentUC = new ProcessPayment(transactionRepo, productRepo, paymentService);
 

@@ -160,6 +160,15 @@ functions:
           method: post
           cors: true
 
+  # Create Products
+  createProducts:
+    handler: ${self:custom.pathRoot}/handlers/createProduct.handler
+    events:
+      - http:
+          path: products
+          method: post
+          cors: true
+
   # Get Products
   getProducts:
     handler: ${self:custom.pathRoot}/handlers/getProducts.handler
