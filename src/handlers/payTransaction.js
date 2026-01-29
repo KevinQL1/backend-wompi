@@ -9,11 +9,10 @@ const paymentService = new PaymentService();
 const processPaymentUC = new ProcessPayment(transactionRepo, productRepo, paymentService);
 
 export const handler = async (event) => {
-  const { transactionId } = event.pathParameters;
   const body = JSON.parse(event.body);
 
   try {
-    const result = await processPaymentUC.execute(transactionId, body.paymentInfo);
+    const result = await processPaymentUC.execute(body.paymentInfo);
     return {
       statusCode: 200,
       body: JSON.stringify(result),

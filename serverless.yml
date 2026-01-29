@@ -30,6 +30,8 @@ provider:
     DELIVERY_TABLE: ${env:DELIVERY_TABLE}
     ENCRYPTION_KEY: ${env:ENCRYPTION_KEY}
     ENCRYPTION_IV: ${env:ENCRYPTION_IV}
+    WOMPI_PUBLIC_KEY: ${env:WOMPI_PUBLIC_KEY}
+    WOMPI_PRIVATE_KEY: ${env:WOMPI_PRIVATE_KEY}
 
   iamRoleStatements:
     - Effect: Allow
@@ -138,7 +140,7 @@ functions:
     handler: ${self:custom.pathRoot}/handlers/createTransaction.handler
     events:
       - http:
-          path: transactions
+          path: transaction
           method: post
           cors: true
 
@@ -147,7 +149,7 @@ functions:
     handler: ${self:custom.pathRoot}/handlers/payTransaction.handler
     events:
       - http:
-          path: transactions/{id}/pay
+          path: transaction/pay
           method: post
           cors: true
 

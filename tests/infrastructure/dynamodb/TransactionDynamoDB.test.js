@@ -88,4 +88,90 @@ describe('TransactionDynamoDB', () => {
 
         expect(sendMock).toHaveBeenCalledWith(expect.any(UpdateCommand));
     });
+
+    test('findById returns transaction entity when found', async () => {
+        sendMock.mockResolvedValue({ Item: {
+            id: 'tx-2',
+            productId: 'p2',
+            customerId: 'c2',
+            amount: 200,
+            status: 'PENDING',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+        } });
+
+        const repo = new TransactionDynamoDB('table');
+        const res = await repo.findById('tx-2');
+
+        expect(sendMock).toHaveBeenCalledWith(expect.any(GetCommand));
+        expect(res).toBeDefined();
+        expect(res.id).toBe('tx-2');
+        expect(res.amount).toBe(200);
+    });
+
+    test('updateStatus sends correct update command', async () => {
+        sendMock.mockResolvedValue({});
+
+        const repo = new TransactionDynamoDB('table');
+        await repo.updateStatus('t1', 'APPROVED', 'w1');
+
+        expect(sendMock).toHaveBeenCalledWith(expect.any(UpdateCommand));
+        const cmd = sendMock.mock.calls[0][0];
+        expect(cmd.input.TableName).toBe('table');
+        expect(cmd.input.Key).toMatchObject({ PK: 'TRANSACTION#t1', SK: 'TRANSACTION#t1' });
+        expect(cmd.input.ExpressionAttributeValues[':status']).toBe('APPROVED');
+        expect(cmd.input.ExpressionAttributeValues[':wompiTransactionId']).toBe('w1');
+        expect(cmd.input.ExpressionAttributeValues[':updatedAt']).toBeDefined();
+    });
+
+    test('save stores item with PK/SK and entity', async () => {
+        sendMock.mockResolvedValue({});
+
+        const repo = new TransactionDynamoDB('table');
+        const tx = {
+            id: 'tx-3',
+            productId: 'p3',
+            customerId: 'c3',
+            amount: 300,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+        };
+
+        await repo.save(tx);
+
+        expect(sendMock).toHaveBeenCalledWith(expect.any(PutCommand));
+        const cmd = sendMock.mock.calls[0][0];
+        expect(cmd.input.Item.PK).toBe('TRANSACTION#tx-3');
+        expect(cmd.input.Item.SK).toBe('TRANSACTION#tx-3');
+        expect(cmd.input.Item.entity).toBe('TransactionEntity');
+    });
+
+    test('findByWompiTransactionId returns null when no items', async () => {
+        sendMock.mockResolvedValue({ Items: [] });
+
+        const repo = new TransactionDynamoDB('table');
+        const res = await repo.findByWompiTransactionId('w-1');
+
+        expect(sendMock).toHaveBeenCalledWith(expect.any(ScanCommand));
+        expect(res).toBeNull();
+    });
+
+    test('findByWompiTransactionId returns transaction when found', async () => {
+        sendMock.mockResolvedValue({ Items: [{
+            id: 'tx-4',
+            productId: 'p4',
+            customerId: 'c4',
+            amount: 400,
+            status: 'PENDING',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z',
+        }] });
+
+        const repo = new TransactionDynamoDB('table');
+        const res = await repo.findByWompiTransactionId('w-2');
+
+        expect(sendMock).toHaveBeenCalledWith(expect.any(ScanCommand));
+        expect(res).toBeDefined();
+        expect(res.id).toBe('tx-4');
+    });
 });

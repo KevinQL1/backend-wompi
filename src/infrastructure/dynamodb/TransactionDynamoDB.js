@@ -90,4 +90,47 @@ export class TransactionDynamoDB {
       })
     );
   }
+
+  async updateStatus(id, status, wompiTransactionId = null) {
+    const now = new Date().toISOString();
+
+    await dynamoDb.send(
+      new UpdateCommand({
+        TableName: this.tableName,
+        Key: {
+          PK: `TRANSACTION#${id}`,
+          SK: `TRANSACTION#${id}`,
+        },
+        UpdateExpression: `
+        SET #status = :status,
+            wompiTransactionId = :wompiTransactionId,
+            updatedAt = :updatedAt
+      `,
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': status,
+          ':wompiTransactionId': wompiTransactionId,
+          ':updatedAt': now,
+        },
+      })
+    );
+  }
+
+  async findByWompiTransactionId(wompiTransactionId) {
+    const result = await dynamoDb.send(
+      new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: 'wompiTransactionId = :wid',
+        ExpressionAttributeValues: {
+          ':wid': wompiTransactionId,
+        },
+      })
+    );
+
+    if (!result.Items || result.Items.length === 0) return null;
+
+    return new TransactionEntity(result.Items[0]);
+  }
 }
