@@ -11,7 +11,12 @@
     "test:ci": "npm test -- --coverage",
     "build": "rimraf dist && node esbuild/mainBuild.js",
     "deploy": "npm run build && serverless deploy",
-    "local": "npm run build && serverless offline"
+    "local": "npm run build && serverless offline",
+    "dynamodb:start": "docker compose up -d",
+    "dynamodb:stop": "docker compose down",
+    "dynamodb:create": "node src/config/utils/createTables.js",
+    "dynamodb:delete": "node src/config/utils/deleteTables.js",
+    "dynamodb:reset": "npm run dynamodb:delete && npm run dynamodb:create"
   },
   "author": "Kevin Quintero",
   "license": "MIT",

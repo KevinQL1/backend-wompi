@@ -8,7 +8,8 @@ export default {
 
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/domain/repositories/**'
+    '!src/domain/repositories/**',
+    '!src/config/utils/**'
   ],
 
   testPathIgnorePatterns: [

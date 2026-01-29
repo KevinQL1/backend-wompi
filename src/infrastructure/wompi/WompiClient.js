@@ -4,7 +4,6 @@ import fetch from 'node-fetch';
 
 export class WompiClient {
   constructor() {
-    // Tu llave de sandbox de Wompi desde el .env
     this.publicKey = process.env.WOMPI_PUBLIC_KEY;
     this.baseUrl = 'https://sandbox.wompi.co/v1';
   }

@@ -24,10 +24,10 @@ provider:
   stage: ${opt:stage, 'local'}
 
   environment:
-    PRODUCT_TABLE: ${self:provider.stage}-ProductTable
-    CUSTOMER_TABLE: ${self:provider.stage}-CustomerTable
-    TRANSACTION_TABLE: ${self:provider.stage}-TransactionTable
-    DELIVERY_TABLE: ${self:provider.stage}-DeliveryTable
+    PRODUCT_TABLE: ${env:PRODUCT_TABLE}
+    CUSTOMER_TABLE: ${env:CUSTOMER_TABLE}
+    TRANSACTION_TABLE: ${env:TRANSACTION_TABLE}
+    DELIVERY_TABLE: ${env:DELIVERY_TABLE}
     ENCRYPTION_KEY: ${env:ENCRYPTION_KEY}
     ENCRYPTION_IV: ${env:ENCRYPTION_IV}
 

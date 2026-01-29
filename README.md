@@ -33,6 +33,7 @@ backend-wompi/
 ├── jest.config.js          # Configuración de Jest
 ├── .env                    # Variables de entorno (no versionado)
 ├── .gitignore              # Configuración Git
+├── docker-compose.yml      # Docker para las tablas de dynamoDB(local)
 │
 ├── src/
 │   ├── domain/             # Núcleo del negocio
