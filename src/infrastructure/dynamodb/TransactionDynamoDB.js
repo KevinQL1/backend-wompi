@@ -94,8 +94,23 @@ export class TransactionDynamoDB {
     return this.findById(id);
   }
 
-  async updateStatus(id, status, wompiTransactionId = null, customerId = null) {
+  async updateStatus(id, status, wompiTransactionId, deliveryId = null) {
     const now = new Date().toISOString();
+
+    // Campos obligatorios: status, updatedAt y wompiTransactionId
+    let updateExp = "SET #status = :status, updatedAt = :updatedAt, wompiTransactionId = :wompiTransactionId";
+    let expAttrNames = { "#status": "status" };
+    let expAttrValues = {
+      ":status": status,
+      ":updatedAt": now,
+      ":wompiTransactionId": wompiTransactionId
+    };
+
+    // Se agrega deliveryId si se pasa
+    if (deliveryId !== null && deliveryId !== undefined) {
+      updateExp += ", deliveryId = :deliveryId";
+      expAttrValues[":deliveryId"] = deliveryId;
+    }
 
     await dynamoDb.send(
       new UpdateCommand({
@@ -104,21 +119,9 @@ export class TransactionDynamoDB {
           PK: `TRANSACTION#${id}`,
           SK: `TRANSACTION#${id}`,
         },
-        UpdateExpression: `
-        SET #status = :status,
-            wompiTransactionId = :wompiTransactionId,
-            customerId = :customerId
-            updatedAt = :updatedAt
-      `,
-        ExpressionAttributeNames: {
-          '#status': 'status',
-        },
-        ExpressionAttributeValues: {
-          ':status': status,
-          ':wompiTransactionId': wompiTransactionId,
-          ':customerId': customerId,
-          ':updatedAt': now,
-        },
+        UpdateExpression: updateExp,
+        ExpressionAttributeNames: expAttrNames,
+        ExpressionAttributeValues: expAttrValues,
       })
     );
 
