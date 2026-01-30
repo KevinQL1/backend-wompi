@@ -6,7 +6,7 @@ export class ProductEntity {
     price,
     stock,
     createdAt,
-    updatedAt 
+    updatedAt
   }) {
     this.validate({ id, name, price, stock })
 
@@ -28,8 +28,8 @@ export class ProductEntity {
       throw new Error('Product name is required')
     }
 
-    if (typeof price !== 'number' || price <= 0) {
-      throw new Error('Product price must be greater than 0')
+    if (typeof price !== 'number' || price <= 1499) {
+      throw new Error('Product price must be greater than 1499')
     }
 
     if (!Number.isInteger(stock) || stock < 0) {

@@ -15,7 +15,7 @@ describe('GetProducts Use Case', () => {
         new ProductEntity({
           id: 'prod-2',
           name: 'Phone',
-          price: 800,
+          price: 1500,
           stock: 5
         })
       ]
