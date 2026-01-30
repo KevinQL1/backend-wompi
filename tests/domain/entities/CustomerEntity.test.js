@@ -6,8 +6,10 @@ describe('CustomerEntity', () => {
       id: '',
       name: 'Juan',
       email: 'juan@test.com',
-      address: 'Calle 123'
-    })).toThrow('Customer id (cedula) is required')
+      address: 'Calle 123',
+      city: 'Bogota',
+      phone: '3001234567'
+    })).toThrow('Customer id (cédula) es requerido y debe ser un string')
   })
 
   it('should throw error if email is invalid', () => {
@@ -15,8 +17,10 @@ describe('CustomerEntity', () => {
       id: '123',
       name: 'Juan',
       email: 'juan.com',
-      address: 'Calle 123'
-    })).toThrow('Customer email is not valid')
+      address: 'Calle 123',
+      city: 'Bogota',
+      phone: '3001234567'
+    })).toThrow('Customer email no es válido')
   })
 
   it('should create a customer correctly', () => {
@@ -24,9 +28,12 @@ describe('CustomerEntity', () => {
       id: '123',
       name: 'Juan',
       email: 'juan@test.com',
-      address: 'Calle 123'
+      address: 'Calle 123',
+      city: 'Bogota',
+      phone: '3001234567'
     })
     expect(customer.id).toBe('123')
-    expect(customer.savedCard).toBeNull()
+    // savedCard no está definido en la entidad actual
+    expect(customer.savedCard).toBeUndefined()
   })
 })

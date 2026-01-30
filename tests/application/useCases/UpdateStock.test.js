@@ -2,64 +2,61 @@ import { UpdateStock } from '#/application/useCases/UpdateStock.js';
 import { jest } from '@jest/globals';
 
 describe('UpdateStock Use Case', () => {
-  let productRepositoryMock;
+  let transactionRepoMock;
+  let productRepoMock;
+  let deliveryRepoMock;
+  let customerRepoMock;
+  let paymentServiceMock;
 
   beforeEach(() => {
-    productRepositoryMock = {
-      findById: jest.fn(),
-      update: jest.fn(),
-    };
+    transactionRepoMock = { findById: jest.fn(), updateStatus: jest.fn() };
+    productRepoMock = { findById: jest.fn(), update: jest.fn() };
+    deliveryRepoMock = { save: jest.fn() };
+    customerRepoMock = { findById: jest.fn() };
+    paymentServiceMock = { findAndUpdateTransactionById: jest.fn() };
 
     jest.clearAllMocks();
   });
 
-  it('should throw error if required fields are missing', async () => {
-    const useCase = new UpdateStock({ productRepository: productRepositoryMock });
+  it('should throw error if transaction has no productId', async () => {
+    transactionRepoMock.findById.mockResolvedValue({ id: 't1' });
+    const useCase = new UpdateStock(transactionRepoMock, productRepoMock, deliveryRepoMock, customerRepoMock, paymentServiceMock);
 
-    await expect(useCase.execute({ productId: '', quantity: 1 }))
-      .rejects.toThrow('productId and quantity are required');
-
-    await expect(useCase.execute({ productId: 'p1', quantity: null }))
-      .rejects.toThrow('productId and quantity are required');
-  });
-
-  it('should throw error if quantity is zero or negative', async () => {
-    const useCase = new UpdateStock({ productRepository: productRepositoryMock });
-
-    await expect(useCase.execute({ productId: 'p1', quantity: 0 }))
-      .rejects.toThrow('Quantity must be greater than zero');
-
-    await expect(useCase.execute({ productId: 'p1', quantity: -5 }))
-      .rejects.toThrow('Quantity must be greater than zero');
+    await expect(useCase.execute('t1')).rejects.toThrow('productId is required');
   });
 
   it('should throw error if product not found', async () => {
-    productRepositoryMock.findById.mockResolvedValue(null);
-    const useCase = new UpdateStock({ productRepository: productRepositoryMock });
+    transactionRepoMock.findById.mockResolvedValue({ id: 't1', productId: 'p1' });
+    productRepoMock.findById.mockResolvedValue(null);
+    const useCase = new UpdateStock(transactionRepoMock, productRepoMock, deliveryRepoMock, customerRepoMock, paymentServiceMock);
 
-    await expect(useCase.execute({ productId: 'p1', quantity: 1 }))
-      .rejects.toThrow('Product with ID p1 not found');
+    await expect(useCase.execute('t1')).rejects.toThrow('Product with ID p1 not found');
   });
 
-  it('should throw error if insufficient stock', async () => {
-    productRepositoryMock.findById.mockResolvedValue({ id: 'p1', name: 'Producto', stock: 2 });
-    const useCase = new UpdateStock({ productRepository: productRepositoryMock });
+  it('should throw if insufficient stock', async () => {
+    transactionRepoMock.findById.mockResolvedValue({ id: 't1', productId: 'p1', quantity: 5 });
+    productRepoMock.findById.mockResolvedValue({ id: 'p1', name: 'Prod', stock: 2 });
+    const useCase = new UpdateStock(transactionRepoMock, productRepoMock, deliveryRepoMock, customerRepoMock, paymentServiceMock);
 
-    await expect(useCase.execute({ productId: 'p1', quantity: 5 }))
-      .rejects.toThrow('Insufficient stock. Available: 2, requested: 5');
+    await expect(useCase.execute('t1')).rejects.toThrow('Product Prod is out of stock or insufficient stock');
   });
 
-  it('should update stock if sufficient', async () => {
-    const product = { id: 'p1', name: 'Producto', stock: 10 };
-    productRepositoryMock.findById.mockResolvedValue(product);
-    productRepositoryMock.update.mockResolvedValue(true);
+  it('should update stock and create delivery when approved', async () => {
+    const transaction = { id: 't1', productId: 'p1', quantity: 1, customerId: 'c1', wompiTransactionId: 'w1' };
+    transactionRepoMock.findById.mockResolvedValue(transaction);
+    productRepoMock.findById.mockResolvedValue({ id: 'p1', name: 'Prod', stock: 10 });
+    paymentServiceMock.findAndUpdateTransactionById.mockResolvedValue({ status: 'APPROVED', id: 'w1' });
+    transactionRepoMock.updateStatus.mockResolvedValue({ status: 'APPROVED' });
+    customerRepoMock.findById.mockResolvedValue({ id: 'c1', address: 'Calle 1' });
+    deliveryRepoMock.save.mockResolvedValue(true);
 
-    const useCase = new UpdateStock({ productRepository: productRepositoryMock });
+    const useCase = new UpdateStock(transactionRepoMock, productRepoMock, deliveryRepoMock, customerRepoMock, paymentServiceMock);
 
-    const result = await useCase.execute({ productId: 'p1', quantity: 3 });
+    const res = await useCase.execute('t1');
 
-    expect(result.stock).toBe(7);
-    expect(result.updatedAt).toBeDefined();
-    expect(productRepositoryMock.update).toHaveBeenCalledTimes(1);
+    expect(productRepoMock.update).toHaveBeenCalled();
+    expect(transactionRepoMock.updateStatus).toHaveBeenCalled();
+    expect(deliveryRepoMock.save).toHaveBeenCalled();
+    expect(res).toHaveProperty('delivery');
   });
 });

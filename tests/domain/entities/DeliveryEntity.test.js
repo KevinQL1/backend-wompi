@@ -1,4 +1,4 @@
-import { DeliveryEntity, DeliveryStatus } from '#/domain/entities/DeliveryEntity.js'
+import { DeliveryEntity } from '#/domain/entities/DeliveryEntity.js'
 
 describe('DeliveryEntity', () => {
   it('should throw error if id is missing', () => {
@@ -9,24 +9,24 @@ describe('DeliveryEntity', () => {
     })).toThrow('Delivery must have an id')
   })
 
-  it('should mark delivery as sent', () => {
-    const delivery = new DeliveryEntity({
+  it('should throw error if transactionId is missing', () => {
+    expect(() => new DeliveryEntity({
       id: 'd1',
-      transactionId: 't1',
+      transactionId: '',
       address: 'Calle 123'
-    })
-    delivery.markAsSent()
-    expect(delivery.status).toBe(DeliveryStatus.SENT)
+    })).toThrow('Delivery must have a transactionId')
   })
 
-  it('should mark delivery as delivered', () => {
+  it('should create delivery correctly', () => {
     const delivery = new DeliveryEntity({
       id: 'd1',
       transactionId: 't1',
       address: 'Calle 123',
-      status: DeliveryStatus.SENT
+      status: 'PENDING',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     })
-    delivery.markAsDelivered()
-    expect(delivery.status).toBe(DeliveryStatus.DELIVERED)
+    expect(delivery.id).toBe('d1')
+    expect(delivery.status).toBe('PENDING')
   })
 })

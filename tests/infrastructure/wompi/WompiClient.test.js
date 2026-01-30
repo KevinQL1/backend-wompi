@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { WompiClient } from '#/infrastructure/wompi/WompiClient.js';
 
 describe('WompiClient', () => {
@@ -5,22 +6,60 @@ describe('WompiClient', () => {
 
   beforeAll(() => {
     process.env.WOMPI_PUBLIC_KEY = 'test_public_key';
+    process.env.WOMPI_INTEGRITY_KEY = 'secret';
     wompiClient = new WompiClient();
   });
 
-  it('Debe crear una transacción y devolver estado y id', async () => {
+  beforeEach(() => {
+    global.fetch = jest.fn();
+  });
+
+  it('tokenCard should return tokens', async () => {
     const paymentInfo = {
-      card_holder: 'Juan Perez',
-      card_number: '4111111111111111',
-      card_expiration: '12/29',
+      cardNumber: '4111111111111111',
+      expiry: '12/29',
       cvc: '123',
-      amount_in_cents: 5000,
+      customer: { name: 'Juan', address: 'Calle 1', city: 'Bogota', phone: '3111111111' }
     };
 
-    const result = await wompiClient.createTransaction('tx_123', paymentInfo);
+    global.fetch.mockImplementation((url) => {
+      if (url.endsWith('/tokens/cards')) {
+        return Promise.resolve({ json: async () => ({ status: 'success', data: { id: 'card-1' } }) });
+      }
+      if (url.includes('/merchants/')) {
+        return Promise.resolve({ json: async () => ({ data: { presigned_acceptance: { acceptance_token: 'acc' }, presigned_personal_data_auth: { acceptance_token: 'per' } } }) });
+      }
+      return Promise.resolve({ json: async () => ({}) });
+    });
 
-    expect(result).toHaveProperty('status');
-    expect(result).toHaveProperty('wompiTransactionId');
-    expect(['APPROVED','DECLINED','PENDING']).toContain(result.status);
+    const tokens = await wompiClient.tokenCard(paymentInfo);
+    expect(tokens).toHaveProperty('status');
+    expect(tokens).toHaveProperty('tokenCard');
+    expect(tokens.tokenCard.id).toBe('card-1');
   });
+
+  it('tokenCard should throw on invalid expiry format', async () => {
+    const badPayment = { cardNumber: '4111', expiry: 'bad', cvc: '123', customer: { name: 'Juan', address: 'a', city: 'b', phone: '3111111111' } }
+    await expect(wompiClient.tokenCard(badPayment)).rejects.toThrow('Formato de expiry inválido')
+  })
+
+  it('tokenMerchants should throw if fetch fails', async () => {
+    global.fetch.mockRejectedValueOnce(new Error('network'))
+    await expect(wompiClient.tokenMerchants()).rejects.toThrow('network')
+  })
+
+  it('createTransaction should throw and wrap error message on failure', async () => {
+    const transaction = { id: 't1', amount: 50, quantity: 1, acceptanceToken: 'acc', personalToken: 'per', cardToken: 'card-1' }
+    const customer = { email: 'a@b.com' }
+
+    global.fetch.mockRejectedValueOnce(new Error('boom'))
+
+    await expect(wompiClient.createTransaction(transaction, customer)).rejects.toThrow(/Error al procesar el pago/)
+  })
+
+  it('findAndUpdateTransactionById should return data', async () => {
+    global.fetch.mockResolvedValueOnce({ json: async () => ({ data: { status: 'APPROVED', id: 'w3' } }) })
+    const res = await wompiClient.findAndUpdateTransactionById('w3')
+    expect(res.id).toBe('w3')
+  })
 });

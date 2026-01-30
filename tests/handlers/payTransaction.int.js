@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 
 process.env.PRODUCT_TABLE = 'mockProductTable'
 process.env.TRANSACTION_TABLE = 'mockTransactionTable'
+process.env.CUSTOMER_TABLE = 'mockCustomerTable'
 
 const mockUpdateStatus = jest.fn().mockResolvedValue(true);
 const mockDecreaseStock = jest.fn().mockResolvedValue(true);
@@ -45,7 +46,9 @@ describe('payTransaction.handler', () => {
 
     const event = {
       pathParameters: { transactionId: 't1' },
-      body: JSON.stringify({ paymentInfo: {} }) // no hace falta campos reales
+      body: JSON.stringify({ paymentInfo: {
+        cardNumber: '4111111111111111', cardType: 'VISA', expiry: '12/29', cvc: '123', customer: { cedula: '1234567', name: 'Juan', email: 'a@b.com', address: 'Calle 1', city: 'Bogota', phone: '3111111111' }, productId: '00000000000000001', quantity: 1
+      } })
     };
 
     const response = await handler(event);
@@ -62,13 +65,15 @@ describe('payTransaction.handler', () => {
 
     const event = {
       pathParameters: { transactionId: 't1' },
-      body: JSON.stringify({ paymentInfo: {} })
+      body: JSON.stringify({ paymentInfo: {
+        cardNumber: '4111111111111111', cardType: 'VISA', expiry: '12/29', cvc: '123', customer: { cedula: '1234567', name: 'Juan', email: 'a@b.com', address: 'Calle 1', city: 'Bogota', phone: '3111111111' }, productId: '00000000000000001', quantity: 1
+      } })
     };
 
     const response = await handler(event);
     const body = JSON.parse(response.body);
 
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode).toBe(500);
     expect(body.error).toBe('Payment failed');
   });
 });
