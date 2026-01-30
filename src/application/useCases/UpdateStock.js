@@ -34,12 +34,6 @@ export class UpdateStock {
             throw new Error(`Product ${product.name} is out of stock or insufficient stock: ${product.stock} for the requested quantity ${transaction.quantity}`);
         }
 
-        // Actualizar stock
-        product.stock -= transaction.quantity;
-        product.updatedAt = new Date().toISOString();
-
-        await this.productRepo.update(product);
-
         // Buscar y actualizar el estado de la transacción de wompi
         const findStatusTransaction = await this.paymentService.findAndUpdateTransactionById(transaction.wompiTransactionId);
 
@@ -52,6 +46,19 @@ export class UpdateStock {
         // Definir estado y tiempo de estimación del delivery
         const transactionStatus = updateTransaction.status
         const isDeclined = transactionStatus === 'DECLINED';
+
+        // **Solo actualiza el stock si la transacción fue aprobada**
+        if (!isDeclined) {
+            // Validar stock suficiente
+            if (product.stock < transaction.quantity) {
+                throw new Error(`Product ${product.name} insufficient stock: ${product.stock} for requested quantity ${transaction.quantity}`);
+            }
+
+            product.stock -= transaction.quantity;
+            product.updatedAt = new Date().toISOString();
+
+            await this.productRepo.update(product);
+        }
 
         //crear delivery
         const newDelivery = new DeliveryEntity({
