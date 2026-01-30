@@ -9,7 +9,7 @@ describe('ProductEntity', () => {
         price: 0,
         stock: 5
       })
-    }).toThrow('Product price must be greater than 0')
+    }).toThrow('Product price must be greater than 1499')
   })
 
   it('should throw error if stock is negative', () => {
@@ -17,7 +17,7 @@ describe('ProductEntity', () => {
       new ProductEntity({
         id: 'p1',
         name: 'Producto Test',
-        price: 100,
+        price: 1500,
         stock: -1
       })
     }).toThrow('Product stock must be a non-negative integer')
@@ -49,7 +49,7 @@ describe('ProductEntity', () => {
     const product = new ProductEntity({
       id: 'p1',
       name: 'Producto Test',
-      price: 100,
+      price: 1500,
       stock: 5
     })
     product.decreaseStock(2)
